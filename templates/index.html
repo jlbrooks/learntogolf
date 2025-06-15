@@ -21,7 +21,88 @@
                     <p class="text-lg text-gray-600">Welcome to your golf progress tracker!</p>
                 </div>
             </div>
+
+            <!-- Score Entry Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Enter Your Round</h2>
+                <form id="score-form" class="space-y-6">
+                    <div class="grid grid-cols-3 gap-4 md:grid-cols-9">
+                        <div class="text-center">
+                            <label for="hole1" class="block text-sm font-medium text-gray-700 mb-1">Hole 1</label>
+                            <input type="number" id="hole1" name="hole1" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole2" class="block text-sm font-medium text-gray-700 mb-1">Hole 2</label>
+                            <input type="number" id="hole2" name="hole2" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole3" class="block text-sm font-medium text-gray-700 mb-1">Hole 3</label>
+                            <input type="number" id="hole3" name="hole3" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole4" class="block text-sm font-medium text-gray-700 mb-1">Hole 4</label>
+                            <input type="number" id="hole4" name="hole4" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole5" class="block text-sm font-medium text-gray-700 mb-1">Hole 5</label>
+                            <input type="number" id="hole5" name="hole5" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole6" class="block text-sm font-medium text-gray-700 mb-1">Hole 6</label>
+                            <input type="number" id="hole6" name="hole6" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole7" class="block text-sm font-medium text-gray-700 mb-1">Hole 7</label>
+                            <input type="number" id="hole7" name="hole7" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole8" class="block text-sm font-medium text-gray-700 mb-1">Hole 8</label>
+                            <input type="number" id="hole8" name="hole8" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                        <div class="text-center">
+                            <label for="hole9" class="block text-sm font-medium text-gray-700 mb-1">Hole 9</label>
+                            <input type="number" id="hole9" name="hole9" min="1" max="10" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="text-lg font-semibold text-gray-700">
+                            Total: <span id="total-score" class="text-green-600">0</span>
+                        </div>
+                        <button type="submit" 
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                            Submit Round
+                        </button>
+                    </div>
+                </form>
+            </div>
         </main>
+
+        <script>
+            // Auto-calculate total score
+            function updateTotal() {
+                let total = 0;
+                for (let i = 1; i <= 9; i++) {
+                    const value = parseInt(document.getElementById(`hole${i}`).value) || 0;
+                    total += value;
+                }
+                document.getElementById('total-score').textContent = total;
+            }
+
+            // Add event listeners to all hole inputs
+            for (let i = 1; i <= 9; i++) {
+                document.getElementById(`hole${i}`).addEventListener('input', updateTotal);
+            }
+        </script>
     </div>
 </body>
 </html>
