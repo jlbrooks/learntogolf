@@ -1,72 +1,62 @@
 # Learn to Golf Tracker - Specification
 
-## Version 1 - Single Player (Completed)
+## Overview
+A multi-user web application for tracking progress in the Learn to Golf program. Players start at Level 1 (225 yards total course) and advance levels by shooting 36 or better on 9-hole rounds. Each user has their own account and tracks their individual progress through 6 levels.
 
-### Overview
-A simple web application to track progress in the Learn to Golf program, where players start at Level 1 (225 yards total course) and level up by shooting 36 or better on 9-hole rounds.
-
-### Technical Stack
-- **Backend**: Python Flask
-- **Frontend**: HTMX with HTML templates
-- **Styling**: Tailwind CSS
-- **Storage**: JSON file persistence
-
-### Core Features
-- Single player score tracking
-- 9-hole score entry with validation
-- Automatic level progression (levels 1-6)
-- Progress dashboard with statistics
-- Responsive design for mobile/desktop
-
-### Level Progression
-- Level 1: 225 yards (25 yards/hole)
-- Level 2: 450 yards (50 yards/hole)
-- Level 3: 900 yards (100 yards/hole)
-- Level 4: 1350 yards (150 yards/hole)
-- Level 5: 1800 yards (200 yards/hole)
-- Level 6: 2250 yards (250 yards/hole)
-
----
-
-## Version 2 - Multi-User Cloud Deployment
-
-### Overview
-Extend the application for multi-user support with authentication and cloud database deployment. Each user tracks their own golf learning progress independently.
-
-### Technical Stack
+## Technical Stack
 - **Backend**: Python Flask with Flask-Login and Flask-SQLAlchemy
-- **Frontend**: HTMX with HTML templates (maintain existing UI)
-- **Styling**: Tailwind CSS (unchanged)
-- **Database**: PostgreSQL via Supabase (free tier: 500MB, 2 concurrent connections)
-- **Deployment**: fly.io
+- **Frontend**: HTMX with Jinja2 templates for dynamic interactions
+- **Styling**: Tailwind CSS via CDN for responsive design
+- **Database**: PostgreSQL (local development and Supabase for production)
+- **Deployment**: fly.io with Docker containerization
+- **Authentication**: Flask-Login with password hashing
 
-### Database Choice: Supabase PostgreSQL
-**Why Supabase:**
-- **Free tier**: 500MB storage, 2 concurrent connections
-- **PostgreSQL**: Mature, reliable, handles JSON data well
-- **Simple setup**: Web dashboard, automatic backups
-- **Scalable**: Easy upgrade path when needed
-- **No server management**: Fully managed service
+## Core Features
 
-### New Features
+### User Authentication
+- **Registration**: Email + password with confirmation
+- **Login**: Email/password authentication with session management
+- **User Isolation**: Complete data separation between users
+- **Welcome Page**: Landing page for unauthenticated users
+- **Session Management**: Secure login/logout with Flask-Login
 
-#### 1. User Authentication
-- **Registration**: Email + password (no email verification)
-- **Login**: Simple email/password form
-- **Session Management**: Flask-Login for session handling
-- **User Isolation**: Each user sees only their own data
+### Golf Progress Tracking
+- **9-hole Score Entry**: Real-time validation and total calculation
+- **Level Progression**: Automatic advancement when shooting 36 or better
+- **Progress Dashboard**: Current level, course info, and advancement status
+- **Statistics Panel**: Comprehensive metrics and performance tracking
+- **Rounds History**: Detailed hole-by-hole scores for recent rounds
 
-#### 2. Database Schema
+### User Interface
+- **Responsive Design**: Mobile-first with Tailwind CSS breakpoints
+- **Dynamic Updates**: HTMX-powered interactions without page reloads
+- **Real-time Feedback**: Client-side validation with visual error indicators
+- **Progressive Enhancement**: Works without JavaScript as fallback
+
+## Level Progression System
+- **Level 1**: 225 yards total (25 yards per hole average)
+- **Level 2**: 450 yards total (50 yards per hole average)
+- **Level 3**: 900 yards total (100 yards per hole average)
+- **Level 4**: 1,350 yards total (150 yards per hole average)
+- **Level 5**: 1,800 yards total (200 yards per hole average)
+- **Level 6**: 2,250 yards total (250 yards per hole average)
+
+Players advance by shooting par (36) or better at their current level.
+
+## Database Schema
+
+### Users Table
 ```sql
--- Users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
--- User profiles (extends user data)
+### User Profiles Table
+```sql
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -74,136 +64,106 @@ CREATE TABLE user_profiles (
     total_rounds INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
--- Rounds table
+### Rounds Table
+```sql
 CREATE TABLE rounds (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     level INTEGER NOT NULL,
-    holes JSONB NOT NULL, -- Array of 9 hole scores
+    holes JSON NOT NULL, -- Array of 9 hole scores
     total INTEGER NOT NULL,
     leveled_up BOOLEAN DEFAULT FALSE,
     played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Indexes for performance
-CREATE INDEX idx_rounds_user_id ON rounds(user_id);
-CREATE INDEX idx_rounds_played_at ON rounds(user_id, played_at DESC);
 ```
 
-#### 3. Updated Routes
-```python
-# Authentication routes
-GET /login          # Login form
-POST /login         # Process login
-GET /register       # Registration form  
-POST /register      # Process registration
-POST /logout        # Logout user
+### Performance Indexes
+- `idx_rounds_user_id` on `rounds(user_id)`
+- `idx_rounds_user_played` on `rounds(user_id, played_at DESC)`
 
-# Protected routes (require login)
-GET /               # User dashboard (existing)
-POST /score         # Submit score (existing, user-scoped)
-GET /progress       # Progress partial (existing, user-scoped)
-GET /history        # History partial (existing, user-scoped)
-GET /stats          # Stats partial (existing, user-scoped)
+## API Routes
+
+### Authentication Routes
+- `GET /` - Welcome page (unauthenticated) or dashboard (authenticated)
+- `GET /login` - Login form
+- `POST /login` - Process login
+- `GET /register` - Registration form
+- `POST /register` - Process registration
+- `GET /logout` - Logout user
+
+### Protected Routes (Login Required)
+- `GET /` - User dashboard with progress overview
+- `POST /score` - Submit round scores (returns HTML for HTMX)
+- `GET /progress` - Progress section partial (HTMX)
+- `GET /history` - Rounds history partial (HTMX)
+- `GET /stats` - Statistics panel partial (HTMX)
+
+## Validation & Error Handling
+
+### Client-side Validation
+- Real-time input validation with visual feedback
+- Score range checking (1-10 strokes per hole)
+- Form completion validation
+
+### Server-side Validation
+- Comprehensive error handling with user-friendly messages
+- Email format validation for registration
+- Password requirements (minimum 6 characters)
+- Duplicate email prevention
+- Score validation and business logic enforcement
+
+## Development Environment
+
+### Local Development Setup
+```bash
+# Database setup
+python create_dev_db.py
+python init_db.py init
+python init_db.py test-user
+
+# Run application
+python app.py
 ```
-
-#### 4. Data Migration Strategy
-- No data migration is needed.
-
-### Implementation Plan
-
-#### Phase 1: Local Database Setup
-1. Install PostgreSQL locally (via Homebrew/package manager)
-2. Create local development database
-3. Create database schema and migrations
-4. Add SQLAlchemy models
-5. Test database connectivity with local PostgreSQL
-
-#### Phase 2: Authentication
-1. Add Flask-Login and password hashing
-2. Create registration/login forms
-3. Implement session management
-4. Add login_required decorators
-5. Test authentication flow with local database
-
-#### Phase 3: User Data Isolation
-1. Update all routes to filter by user_id
-2. Modify models to associate data with users
-3. Update templates to show user-specific data
-4. Test multi-user scenarios locally
-5. Ensure complete data separation between users
-
-#### Phase 4: Production Deployment
-1. Set up Supabase PostgreSQL database
-2. Configure environment variables for production
-3. Set up fly.io deployment configuration
-4. Deploy application to fly.io
-5. Configure production database connection to Supabase
-6. Test production deployment and database connectivity
-7. Run production smoke tests
 
 ### Environment Variables
-
-#### Local Development
 ```bash
-# Database (local PostgreSQL)
-DATABASE_URL=postgresql://localhost:5432/op36golf_dev
-
-# Flask
+# Local Development
+DATABASE_URL=postgresql+psycopg://localhost:5432/learntogolf_dev
 SECRET_KEY=dev-secret-key-change-in-production
 FLASK_ENV=development
-```
 
-#### Production (fly.io)
-```bash
-# Database (Supabase)
-DATABASE_URL=postgresql://user:pass@host:port/db
-
-# Flask
-SECRET_KEY=your-secure-secret-key
+# Production
+DATABASE_URL=postgresql+psycopg://[supabase_connection_string]
+SECRET_KEY=[secure_production_key]
 FLASK_ENV=production
-
-# Optional: Analytics
-PLAUSIBLE_DOMAIN=yourdomain.com
 ```
 
-### Deployment Platform: fly.io
+## Production Deployment
 
-#### Why fly.io:
-- **Performance**: Edge deployment, fast global performance
-- **Simplicity**: Single command deployment with flyctl
-- **Cost-effective**: Generous free tier, pay-as-you-scale
-- **Docker-based**: Flexible deployment options
-- **PostgreSQL**: Easy integration with external databases like Supabase
+### Docker Configuration
+- Python 3.11 slim base image
+- Gunicorn WSGI server with 2 workers
+- Non-root user for security
+- Port 8080 exposure
 
-#### Local Development Setup:
-```bash
-# Install PostgreSQL locally
-brew install postgresql  # macOS
-sudo apt-get install postgresql  # Ubuntu
+### fly.io Configuration
+- Primary region: San Jose (sjc)
+- Auto-scaling with stop/start machines
+- HTTPS enforcement
+- 1GB memory, 1 shared CPU
+- Static file serving at `/static/`
 
-# Create development database
-createdb op36golf_dev
+### Database
+- **Development**: Local PostgreSQL
+- **Production**: Supabase PostgreSQL
+- Connection string compatibility handling for both environments
 
-# Install Python dependencies
-pip install flask flask-sqlalchemy flask-login psycopg2-binary
-```
-
-#### Production Deployment:
-```bash
-# Install flyctl
-brew install flyctl  # macOS
-
-# Login and deploy
-flyctl auth login
-flyctl launch
-flyctl deploy
-```
-
-### Security Considerations
-- **Password Hashing**: Use bcrypt/Argon2
-- **Session Security**: Secure cookies, CSRF protection
-- **SQL Injection**: Use SQLAlchemy ORM (prevents SQL injection)
-- **Input Validation**: Maintain existing validation + email validation
-- **Rate Limiting**: Basic rate limiting on auth endpoints
+## Security Features
+- **Password Hashing**: Werkzeug secure password hashing
+- **Session Security**: Flask-Login session management
+- **SQL Injection Prevention**: SQLAlchemy ORM usage
+- **Input Validation**: Comprehensive client and server-side validation
+- **User Data Isolation**: Complete separation of user data
+- **HTTPS Enforcement**: Required in production
