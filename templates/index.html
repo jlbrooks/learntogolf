@@ -18,8 +18,48 @@
             <!-- Current Level Section -->
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Current Progress</h2>
-                <div class="text-center">
-                    <p class="text-lg text-gray-600">Welcome to your golf progress tracker!</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Level Info -->
+                    <div class="text-center">
+                        <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-3">
+                            <span class="text-3xl font-bold text-green-800">{{ level_info.level }}</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Level {{ level_info.level }}</h3>
+                        <p class="text-sm text-gray-600">{{ level_info.total_yards }} yards total</p>
+                        <p class="text-sm text-gray-600">{{ "%.1f"|format(level_info.yards_per_hole) }} yards per hole</p>
+                    </div>
+                    
+                    <!-- Progress Indicator -->
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <div class="text-2xl font-bold text-gray-800">{{ player.get_rounds_at_current_level() }}</div>
+                            <p class="text-sm text-gray-600">rounds at this level</p>
+                        </div>
+                        {% if player.current_level < 6 %}
+                            <div class="bg-gray-200 rounded-full h-3 mb-2">
+                                {% set progress = 0 %}
+                                {% for round in recent_rounds %}
+                                    {% if round.level == player.current_level and round.total <= 36 %}
+                                        {% set progress = 100 %}
+                                    {% endif %}
+                                {% endfor %}
+                                <div class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: {{ progress }}%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">Shoot 36 or better to level up</p>
+                        {% else %}
+                            <div class="bg-yellow-100 rounded-full px-3 py-1 inline-block">
+                                <span class="text-yellow-800 font-semibold">Max Level!</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Target Score -->
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-600 mb-2">36</div>
+                        <h3 class="text-lg font-semibold text-gray-800">Target Score</h3>
+                        <p class="text-sm text-gray-600">Par 4 × 9 holes</p>
+                        <p class="text-sm text-gray-600">4 strokes per hole</p>
+                    </div>
                 </div>
             </div>
 
