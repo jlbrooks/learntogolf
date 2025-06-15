@@ -89,5 +89,21 @@ def get_history():
                          player=player,
                          recent_rounds=recent_rounds)
 
+@app.route('/stats')
+def get_stats():
+    player = data_store.player
+    
+    stats = {
+        'total_rounds': player.total_rounds,
+        'average_score': player.get_average_score(),
+        'best_score': player.get_best_score(),
+        'current_level': player.current_level,
+        'rounds_at_current_level': player.get_rounds_at_current_level(),
+        'par_or_better_count': sum(1 for r in player.rounds if r.total <= 36),
+        'level_ups': sum(1 for r in player.rounds if r.leveled_up)
+    }
+    
+    return render_template('stats_section.html', stats=stats)
+
 if __name__ == '__main__':
     app.run(debug=True)
