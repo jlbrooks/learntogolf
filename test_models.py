@@ -179,9 +179,12 @@ class TestUtils(unittest.TestCase):
     
     def test_calculate_course_length(self):
         """Test course length calculation."""
-        self.assertEqual(calculate_course_length(1), 225)  # 225 + (1-1)*25
-        self.assertEqual(calculate_course_length(2), 250)  # 225 + (2-1)*25
-        self.assertEqual(calculate_course_length(6), 350)  # 225 + (6-1)*25
+        self.assertEqual(calculate_course_length(1), 225)
+        self.assertEqual(calculate_course_length(2), 450)
+        self.assertEqual(calculate_course_length(3), 900)
+        self.assertEqual(calculate_course_length(4), 1350)
+        self.assertEqual(calculate_course_length(5), 1800)
+        self.assertEqual(calculate_course_length(6), 2250)
     
     def test_get_level_info(self):
         """Test level info generation."""
@@ -191,6 +194,11 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(level_info['yards_per_hole'], 25.0)
         self.assertEqual(level_info['target_score'], 36)
         self.assertEqual(level_info['par_per_hole'], 4)
+        
+        # Test level 2 with new progression
+        level_info_2 = get_level_info(2)
+        self.assertEqual(level_info_2['total_yards'], 450)
+        self.assertEqual(level_info_2['yards_per_hole'], 50.0)
     
     def test_validate_round_scores(self):
         """Test round score validation."""

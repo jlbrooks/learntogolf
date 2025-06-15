@@ -1,6 +1,14 @@
 def calculate_course_length(level: int) -> int:
     """Calculate total course length for a given level."""
-    return 225 + (level - 1) * 25
+    level_yards = {
+        1: 225,
+        2: 450,
+        3: 900,
+        4: 1350,
+        5: 1800,
+        6: 2250
+    }
+    return level_yards.get(level, 225)
 
 def calculate_yards_per_hole(level: int) -> float:
     """Calculate yards per hole for a given level."""
