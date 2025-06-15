@@ -9,15 +9,27 @@ app = Flask(__name__)
 
 # Configuration
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URL', 
-    'postgresql+psycopg://localhost:5432/learntogolf_dev'
-)
+
+# Handle DATABASE_URL - replace postgresql:// with postgresql+psycopg:// for Supabase compatibility
+database_url = os.environ.get('DATABASE_URL', 'postgresql+psycopg://localhost:5432/learntogolf_dev')
+if database_url.startswith('postgresql://'):
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db.init_app(app)
 init_auth(app)
+
+# Auto-initialize database tables in production
+with app.app_context():
+    try:
+        db.create_all()
+        print("Database tables initialized successfully")
+    except Exception as e:
+        print(f"Database initialization warning: {e}")
+        # Don't fail startup if tables already exist
 
 @app.route('/')
 def index():
