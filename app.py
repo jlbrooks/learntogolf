@@ -69,5 +69,16 @@ def submit_score():
         </div>
         ''', 500
 
+@app.route('/progress')
+def get_progress():
+    player = data_store.player
+    level_info = get_level_info(player.current_level)
+    recent_rounds = player.get_recent_rounds(5)
+    
+    return render_template('progress_section.html', 
+                         player=player, 
+                         level_info=level_info,
+                         recent_rounds=recent_rounds)
+
 if __name__ == '__main__':
     app.run(debug=True)
