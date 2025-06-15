@@ -56,7 +56,7 @@ This is a complete web application for tracking progress in the Operation 36 gol
 ## Key Business Logic
 
 - **Level Progression**: Players advance when they shoot 36 or better (Par 4 × 9 holes)
-- **Course Length**: 225 + (level - 1) × 25 yards total, max level 6
+- **Course Length**: L1: 225y, L2: 450y, L3: 900y, L4: 1350y, L5: 1800y, L6: 2250y
 - **Score Validation**: Individual hole scores must be 1-10 strokes
 - **Statistics**: Average score, best score, success rate, rounds per level
 

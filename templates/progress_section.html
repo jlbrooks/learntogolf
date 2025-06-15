@@ -11,7 +11,7 @@
             </div>
             <h3 class="text-lg font-semibold text-gray-800">Level {{ level_info.level }}</h3>
             <p class="text-sm text-gray-600">{{ level_info.total_yards }} yards total</p>
-            <p class="text-sm text-gray-600">{{ "%.1f"|format(level_info.yards_per_hole) }} yards per hole</p>
+            <p class="text-sm text-gray-600">{{ level_info.yards_per_hole|round|int }} yards per hole</p>
         </div>
         
         <!-- Progress Indicator -->
