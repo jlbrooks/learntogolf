@@ -20,8 +20,11 @@ db.init_app(app)
 init_auth(app)
 
 @app.route('/')
-@login_required
 def index():
+    # If user is not authenticated, show welcome page
+    if not current_user.is_authenticated:
+        return render_template('welcome.html')
+    
     # Get or create user profile
     profile = current_user.profile
     if not profile:
