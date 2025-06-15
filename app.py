@@ -80,5 +80,14 @@ def get_progress():
                          level_info=level_info,
                          recent_rounds=recent_rounds)
 
+@app.route('/history')
+def get_history():
+    player = data_store.player
+    recent_rounds = player.get_recent_rounds(10)
+    
+    return render_template('history_section.html', 
+                         player=player,
+                         recent_rounds=recent_rounds)
+
 if __name__ == '__main__':
     app.run(debug=True)
