@@ -44,18 +44,30 @@ def submit_score():
         else:
             message = f'Round completed with a score of {round_obj.total}. Keep practicing!'
         
-        return jsonify({
-            'success': True,
-            'message': message,
-            'total': round_obj.total,
-            'leveled_up': round_obj.leveled_up,
-            'new_level': data_store.player.current_level
-        })
+        # Return HTML response for HTMX
+        success_class = "text-green-600" if round_obj.total <= 36 else "text-blue-600"
+        level_up_badge = ""
+        if round_obj.leveled_up and data_store.player.current_level > round_obj.level:
+            level_up_badge = f'<span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2">Level Up!</span>'
+        
+        return f'''
+        <div class="p-4 rounded-lg bg-gray-50 border-l-4 border-green-500">
+            <p class="font-semibold {success_class}">{message}{level_up_badge}</p>
+        </div>
+        '''
         
     except ValueError as e:
-        return jsonify({'error': 'Invalid score values. Please enter numbers between 1 and 10.'}), 400
+        return '''
+        <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+            <p class="font-semibold text-red-600">Invalid score values. Please enter numbers between 1 and 10.</p>
+        </div>
+        ''', 400
     except Exception as e:
-        return jsonify({'error': 'An error occurred while processing your round.'}), 500
+        return '''
+        <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+            <p class="font-semibold text-red-600">An error occurred while processing your round.</p>
+        </div>
+        ''', 500
 
 if __name__ == '__main__':
     app.run(debug=True)
