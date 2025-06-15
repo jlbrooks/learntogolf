@@ -23,15 +23,41 @@ def submit_score():
         holes = []
         for i in range(1, 10):
             hole_score = request.form.get(f'hole{i}')
-            if hole_score:
-                holes.append(int(hole_score))
-            else:
-                return jsonify({'error': f'Missing score for hole {i}'}), 400
+            if hole_score is None or hole_score.strip() == '':
+                return '''
+                <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+                    <p class="font-semibold text-red-600">Missing score for hole {}</p>
+                    <p class="text-sm text-red-500 mt-1">Please enter a score for all 9 holes.</p>
+                </div>
+                '''.format(i), 400
+            
+            try:
+                score = int(hole_score)
+                if score < 1 or score > 10:
+                    return '''
+                    <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+                        <p class="font-semibold text-red-600">Invalid score for hole {}</p>
+                        <p class="text-sm text-red-500 mt-1">Scores must be between 1 and 10 strokes.</p>
+                    </div>
+                    '''.format(i), 400
+                holes.append(score)
+            except ValueError:
+                return '''
+                <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+                    <p class="font-semibold text-red-600">Invalid score for hole {}</p>
+                    <p class="text-sm text-red-500 mt-1">Please enter a valid number between 1 and 10.</p>
+                </div>
+                '''.format(i), 400
         
-        # Validate the round
+        # Validate the round (additional validation)
         is_valid, message = validate_round_scores(holes)
         if not is_valid:
-            return jsonify({'error': message}), 400
+            return '''
+            <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+                <p class="font-semibold text-red-600">Invalid Round</p>
+                <p class="text-sm text-red-500 mt-1">{}</p>
+            </div>
+            '''.format(message), 400
         
         # Add the round to the player's data
         round_obj = data_store.add_round(holes)
@@ -56,16 +82,13 @@ def submit_score():
         </div>
         '''
         
-    except ValueError as e:
-        return '''
-        <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
-            <p class="font-semibold text-red-600">Invalid score values. Please enter numbers between 1 and 10.</p>
-        </div>
-        ''', 400
     except Exception as e:
+        # Log the actual error for debugging
+        print(f"Error processing score submission: {e}")
         return '''
         <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
-            <p class="font-semibold text-red-600">An error occurred while processing your round.</p>
+            <p class="font-semibold text-red-600">Unexpected Error</p>
+            <p class="text-sm text-red-500 mt-1">An error occurred while processing your round. Please try again.</p>
         </div>
         ''', 500
 
