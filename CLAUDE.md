@@ -18,16 +18,19 @@ This is a complete web application for tracking progress in the Learn to Golf pr
 
 ```
 ├── app.py                      # Main Flask application
-├── models.py                   # Data models (Player, Round, DataStore)
+├── models.py                   # V1 data models (Player, Round, DataStore)
+├── db_models.py                # V2 SQLAlchemy models (User, UserProfile, Round)
 ├── utils.py                    # Utility functions for calculations and validation
 ├── test_models.py              # Complete test suite
+├── init_db.py                  # Database initialization and management
+├── create_dev_db.py            # Development database creation script
 ├── requirements.txt            # Python dependencies
 ├── templates/
 │   ├── index.html             # Main page template
 │   ├── progress_section.html  # Progress dashboard partial
 │   ├── history_section.html   # Rounds history partial
 │   └── stats_section.html     # Statistics panel partial
-├── player_data.json           # Generated data file (gitignored)
+├── player_data.json           # V1 generated data file (gitignored)
 └── venv/                      # Virtual environment (gitignored)
 ```
 
@@ -76,6 +79,12 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
+# Database setup (Version 2)
+python create_dev_db.py                # Create development database
+python init_db.py init                 # Initialize tables and indexes
+python init_db.py test-user            # Create test user (test@learntogolf.com / password123)
+python init_db.py reset                # Reset database (drops all data!)
+
 # Run application
 python app.py
 
@@ -85,9 +94,19 @@ python test_models.py
 
 ## Development Notes
 
+### Version 1 (Current)
 - **Single Player**: No authentication required, one player per instance
+- **Data Storage**: JSON file persistence via DataStore class
 - **HTMX Integration**: All form submissions and updates happen without page reloads
 - **Responsive Design**: Works well on mobile devices with touch-friendly inputs
+
+### Version 2 (In Development)
+- **Multi-User**: Authentication with Flask-Login and user isolation
+- **Database**: PostgreSQL with SQLAlchemy ORM models
+- **Local Development**: Uses local PostgreSQL database (`learntogolf_dev`)
+- **Production**: Designed for Supabase PostgreSQL + fly.io deployment
+
+### Common Features
 - **Error Handling**: Comprehensive validation on both client and server sides
 - **Testing**: Full test coverage with 15 unit tests covering all core functionality
 - **Data Safety**: Automatic data persistence with error recovery
