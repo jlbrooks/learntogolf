@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a complete web application for tracking progress in the Operation 36 golf program. Players start at Level 1 (225 yards total course, 25 yards per hole) and advance levels by shooting 36 or better on 9-hole rounds. The course gets progressively longer with each level up to a maximum of Level 6.
+This is a complete web application for tracking progress in the Learn to Golf program. Players start at Level 1 (225 yards total course, 25 yards per hole) and advance levels by shooting 36 or better on 9-hole rounds. The course gets progressively longer with each level up to a maximum of Level 6.
 
 ## Technical Architecture
 

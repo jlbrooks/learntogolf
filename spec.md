@@ -1,9 +1,9 @@
-# Operation 36 Golf Tracker - Specification
+# Learn to Golf Tracker - Specification
 
 ## Version 1 - Single Player (Completed)
 
 ### Overview
-A simple web application to track progress in the Operation 36 golf program, where players start at Level 1 (225 yards total course) and level up by shooting 36 or better on 9-hole rounds.
+A simple web application to track progress in the Learn to Golf program, where players start at Level 1 (225 yards total course) and level up by shooting 36 or better on 9-hole rounds.
 
 ### Technical Stack
 - **Backend**: Python Flask
@@ -31,7 +31,7 @@ A simple web application to track progress in the Operation 36 golf program, whe
 ## Version 2 - Multi-User Cloud Deployment
 
 ### Overview
-Extend the application for multi-user support with authentication and cloud database deployment. Each user tracks their own progress independently.
+Extend the application for multi-user support with authentication and cloud database deployment. Each user tracks their own golf learning progress independently.
 
 ### Technical Stack
 - **Backend**: Python Flask with Flask-Login and Flask-SQLAlchemy

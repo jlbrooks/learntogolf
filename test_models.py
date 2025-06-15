@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the Operation 36 Golf Tracker models and logic."""
+"""Tests for the Learn to Golf Tracker models and logic."""
 
 import unittest
 import tempfile
