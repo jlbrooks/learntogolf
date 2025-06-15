@@ -9,9 +9,18 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto p-3 sm:p-4 max-w-4xl">
-        <header class="text-center mb-6 sm:mb-8">
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-800 mb-2">Learn to Golf Tracker</h1>
-            <p class="text-sm sm:text-base text-gray-600">Track your golf learning progress through the levels</p>
+        <header class="mb-6 sm:mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex-1"></div>
+                <div class="text-center flex-1">
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-800 mb-2">Learn to Golf Tracker</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Track your golf learning progress through the levels</p>
+                </div>
+                <div class="flex-1 text-right">
+                    <div class="text-sm text-gray-600 mb-2">{{ current_user.email }}</div>
+                    <a href="{{ url_for('logout') }}" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</a>
+                </div>
+            </div>
         </header>
         
         <main class="space-y-4 sm:space-y-6 lg:space-y-8">

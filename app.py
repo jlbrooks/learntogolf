@@ -1,22 +1,45 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from models import DataStore
+import os
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user, login_user, logout_user
+from db_models import db, User, UserProfile, Round
+from auth import init_auth
 from utils import validate_round_scores, get_level_info
 
 app = Flask(__name__)
-data_store = DataStore()
+
+# Configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL', 
+    'postgresql+psycopg://localhost:5432/learntogolf_dev'
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
+db.init_app(app)
+init_auth(app)
 
 @app.route('/')
+@login_required
 def index():
-    player = data_store.player
-    level_info = get_level_info(player.current_level)
-    recent_rounds = player.get_recent_rounds(5)
+    # Get or create user profile
+    profile = current_user.profile
+    if not profile:
+        profile = UserProfile(user_id=current_user.id)
+        db.session.add(profile)
+        db.session.commit()
+    
+    # Get data for dashboard
+    level_info = get_level_info(profile.current_level)
+    recent_rounds = profile.get_recent_rounds(5)
     
     return render_template('index.html', 
-                         player=player, 
+                         player=profile, 
                          level_info=level_info,
                          recent_rounds=recent_rounds)
 
 @app.route('/score', methods=['POST'])
+@login_required
 def submit_score():
     try:
         # Extract hole scores from form data
@@ -59,12 +82,22 @@ def submit_score():
             </div>
             '''.format(message), 400
         
-        # Add the round to the player's data
-        round_obj = data_store.add_round(holes)
+        # Get user profile
+        profile = current_user.profile
+        if not profile:
+            return '''
+            <div class="p-4 rounded-lg bg-red-50 border-l-4 border-red-500">
+                <p class="font-semibold text-red-600">Profile Error</p>
+                <p class="text-sm text-red-500 mt-1">User profile not found. Please contact support.</p>
+            </div>
+            ''', 500
         
-        # Check if this was a successful round (level up)
-        if round_obj.leveled_up and data_store.player.current_level > round_obj.level:
-            message = f'Congratulations! You shot {round_obj.total} and leveled up to Level {data_store.player.current_level}!'
+        # Add the round to the user's profile
+        round_obj = profile.add_round(holes)
+        
+        # Generate success message
+        if round_obj.leveled_up and profile.current_level > round_obj.level:
+            message = f'Congratulations! You shot {round_obj.total} and leveled up to Level {profile.current_level}!'
         elif round_obj.total <= 36:
             message = f'Great round! You shot {round_obj.total} (Par or better).'
         else:
@@ -73,7 +106,7 @@ def submit_score():
         # Return HTML response for HTMX
         success_class = "text-green-600" if round_obj.total <= 36 else "text-blue-600"
         level_up_badge = ""
-        if round_obj.leveled_up and data_store.player.current_level > round_obj.level:
+        if round_obj.leveled_up and profile.current_level > round_obj.level:
             level_up_badge = f'<span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full ml-2">Level Up!</span>'
         
         return f'''
@@ -93,40 +126,133 @@ def submit_score():
         ''', 500
 
 @app.route('/progress')
+@login_required
 def get_progress():
-    player = data_store.player
-    level_info = get_level_info(player.current_level)
-    recent_rounds = player.get_recent_rounds(5)
+    profile = current_user.profile
+    level_info = get_level_info(profile.current_level)
+    recent_rounds = profile.get_recent_rounds(5)
     
     return render_template('progress_section.html', 
-                         player=player, 
+                         player=profile, 
                          level_info=level_info,
                          recent_rounds=recent_rounds)
 
 @app.route('/history')
+@login_required
 def get_history():
-    player = data_store.player
-    recent_rounds = player.get_recent_rounds(10)
+    profile = current_user.profile
+    recent_rounds = profile.get_recent_rounds(10)
     
     return render_template('history_section.html', 
-                         player=player,
+                         player=profile,
                          recent_rounds=recent_rounds)
 
 @app.route('/stats')
+@login_required
 def get_stats():
-    player = data_store.player
+    profile = current_user.profile
+    
+    # Calculate statistics
+    par_or_better_count = Round.query.filter_by(user_id=current_user.id).filter(Round.total <= 36).count()
+    level_ups = Round.query.filter_by(user_id=current_user.id, leveled_up=True).count()
     
     stats = {
-        'total_rounds': player.total_rounds,
-        'average_score': player.get_average_score(),
-        'best_score': player.get_best_score(),
-        'current_level': player.current_level,
-        'rounds_at_current_level': player.get_rounds_at_current_level(),
-        'par_or_better_count': sum(1 for r in player.rounds if r.total <= 36),
-        'level_ups': sum(1 for r in player.rounds if r.leveled_up)
+        'total_rounds': profile.total_rounds,
+        'average_score': profile.get_average_score(),
+        'best_score': profile.get_best_score(),
+        'current_level': profile.current_level,
+        'rounds_at_current_level': profile.get_rounds_at_current_level(),
+        'par_or_better_count': par_or_better_count,
+        'level_ups': level_ups
     }
     
     return render_template('stats_section.html', stats=stats)
 
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """User login page."""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        
+        if not email or not password:
+            flash('Please enter both email and password.', 'error')
+            return render_template('login.html')
+        
+        user = User.query.filter_by(email=email).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid email or password.', 'error')
+            return render_template('login.html')
+    
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])  
+def register():
+    """User registration page."""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        # Validation
+        if not email or not password:
+            flash('Please enter both email and password.', 'error')
+            return render_template('register.html')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('register.html')
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long.', 'error')
+            return render_template('register.html')
+        
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            flash('An account with this email already exists.', 'error')
+            return render_template('register.html')
+        
+        try:
+            # Create new user
+            user = User(email=email)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            
+            # Create user profile
+            profile = UserProfile(user_id=user.id)
+            db.session.add(profile)
+            db.session.commit()
+            
+            # Log in the user
+            login_user(user)
+            flash('Account created successfully! Welcome to Learn to Golf Tracker.', 'success')
+            return redirect(url_for('index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while creating your account. Please try again.', 'error')
+            return render_template('register.html')
+    
+    return render_template('register.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Log out the current user."""
+    logout_user()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('login'))
+
+
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
