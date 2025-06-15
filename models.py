@@ -47,7 +47,7 @@ class Player:
         return round_obj
     
     def get_recent_rounds(self, limit: int = 10) -> List[Round]:
-        return self.rounds[-limit:]
+        return self.rounds[-limit:][::-1]  # Reverse to show most recent first
     
     def get_average_score(self) -> float:
         if not self.rounds:
